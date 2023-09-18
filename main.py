@@ -97,7 +97,28 @@ if __name__ == '__main__':
 
         # reorganize the data so that it is the same structure as when training
         sorted_df = full_df[['buchungs_nr', 'Date_Time', 'artikel_nr', 'bewegungsart', 'Totaal_gewicht',
-                           'Stuk_gewicht', 'Magazijn_LN', 'Voorraad na mutatie', 'Beweging',
-                           'Transactions since correction']]
+                             'Stuk_gewicht', 'Magazijn_LN', 'Voorraad na mutatie', 'Beweging',
+                             'Transactions since correction']]
+        sorted_df = sorted_df.reset_index().drop(columns='index')
         sorted_df.to_csv(os.getcwd() + '/ordend_esa_ln_data.csv')
+
+        # Split the transactions that happen after the last correction for each sku and warehouse combination
+        uncorrected_df, corrected_df = split_df(sorted_df, sku_warehouse_df)
+
+        corrected_df.to_csv(os.getcwd() + '/data_w_corrections.csv')
+        uncorrected_df.to_csv(os.getcwd() + '/data_w_o_corrections.csv')
+
+    if train:
+        corrected_df = pd.read_csv(os.getcwd() + '/data_w_corrections.csv')
+        corrected_df = corrected_df.drop(columns=['Unnamed: 0', 'buchungs_nr', 'Date_Time'])
+        enc_corrected_df = integer_encode_multi_column(corrected_df, columns=['bewegungsart', 'Magazijn_LN', 'Beweging'])
+        train_df, test_df = train_test_split(corrected_df)
+
+        train_features = train_df.drop(columns='Discrepancy')
+        train_target = train_df['Discrepancy']
+
+        test_features = test_df.drop(columns='Discrepancy')
+        test_target = test_df['Discrepancy']
+
+
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
