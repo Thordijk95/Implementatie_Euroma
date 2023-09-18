@@ -433,3 +433,57 @@ def calc_expected_inv(df):
     df['Transactions since correction'] = tx_to_corr
 
     return df
+
+
+def calc_discrepancy(df, corrections):
+    # create local copy of the dataframe to prevent making changes in the original
+    loc_df = df.copy(deep=True)
+    discrepancy = np.zeros(len(df))
+    discrepancy_n_1 = np.zeros(len(df))
+    if len(corrections) > 0:
+        # create an array to store the discrepanc
+        # execute the discrepancy loop for as many corrections as there are present
+        for i in range(0, len(corrections)-1):
+            if ((corrections[i+1]-1) - (corrections[i])) > 0:
+                tmp_df = loc_df.loc[corrections[i]+1:corrections[i+1]-1]
+                tx_size = tmp_df['Stuk_gewicht'].to_numpy()
+                total_tx = np.sum(np.abs(tx_size))
+                change = loc_df['Stuk_gewicht'].iloc[corrections[i+1]]/(corrections[i+1]-1 - corrections[i]+1)
+                for j in range(corrections[i]+1, corrections[i+1]):
+                    if j == 0:
+                        discrepancy[j] = change
+                        discrepancy_n_1 = 0
+                    else:
+                        discrepancy[j] = discrepancy[j-1] + change
+                        discrepancy_n_1[j] = discrepancy[j-1]
+
+    loc_df['Discrepancy'] = discrepancy
+    loc_df['Discrepancy n-1'] = discrepancy_n_1
+
+    return loc_df
+
+
+def integer_encode_single_column(column, column_name):
+    local = column.copy(deep=True)
+    unique = local.unique()
+    unique_df = pd.DataFrame([unique])
+    # export the encoding for referencing lateron
+    path = os.getcwd() + "/Encoding/" + column_name + ".csv"
+    unique_df.to_csv(path)
+    np_total = local
+    for i in range(len(np_total)):
+        # if np.where(np_total[i] == unique) == nan:
+        #     indx[0][0] = 0
+        indx = np.where(np_total[i] == unique)
+        np_total[i] = indx[0][0]
+    return np_total
+
+
+def integer_encode_multi_column(df, columns):
+    local = df.copy(deep=True)
+    for i in columns:
+        if i in local.columns:
+            local[i] = integer_encode_single_column(local[i], i)
+        else:
+            print('column: ' + i + ' not in dataframe')
+    return local
