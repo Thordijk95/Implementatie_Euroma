@@ -4,6 +4,47 @@ import os
 from datetime import datetime, timedelta
 
 
+def split_df(df, sku_loc):
+    loc_df = df.copy(deep=True)
+
+    col_names = []
+    for i in range(len(loc_df.columns)):
+        col_names.append(loc_df.columns[i])
+    col_names.append('Discrepancy')
+    col_names.append('Discrepancy n-1')
+
+    complete_uncorrected_df = pd.DataFrame(columns=col_names)
+    complete_corrected_df = pd.DataFrame(columns=col_names)
+
+
+    for i in range(len(sku_loc)):
+        tmp_df = loc_df[(loc_df['artikel_nr'] == sku_loc['Artikel'][i]) & (loc_df['Magazijn_LN'] == sku_loc['Opslaglocatie'][i])]
+        if len(tmp_df) > 0:
+            tmp_df = tmp_df.reset_index().drop(columns='index')
+            # Filter returned rows
+            # convert the mutation type to numpy array for fast search
+            tx_types = tmp_df['bewegungsart'].to_numpy()
+            # find the transactions that are corrections
+            corrections = np.where(tx_types == 'V')[0]
+            if len(corrections) == 0:
+                corrections = [0]
+            uncorrected_df = tmp_df.loc[corrections[-1]:]
+            corrected_df = tmp_df.loc[:corrections[-1]]
+
+            if len(corrected_df) > 0:
+                corrected_df = calc_discrepancy(corrected_df, corrections)
+                complete_corrected_df = pd.concat([complete_corrected_df, corrected_df])
+            if len(uncorrected_df) > 0:
+                complete_uncorrected_df = pd.concat([complete_uncorrected_df, uncorrected_df])
+    uncorrected_disc = np.zeros(len(complete_uncorrected_df))
+    uncorrected_disc_n_1 = np.zeros(len(complete_uncorrected_df))
+    complete_uncorrected_df['Discrepancy'] = uncorrected_disc
+    complete_uncorrected_df['Discrepancy n-1'] = uncorrected_disc_n_1
+    complete_uncorrected_df = complete_uncorrected_df.sort_values(by='Date_Time')
+    complete_corrected_df = complete_corrected_df.sort_values(by='Date_Time')
+    return complete_uncorrected_df, complete_corrected_df
+
+
 def get_new_data():
     # initialize the locations of the data
     esa_path = os.getcwd() + '/Data/ESA.csv'  # FIXME change to actual location
@@ -130,8 +171,7 @@ def replace_character(column, old_character, new_character):
 
 def convert_location(locations, descriptions):
     print('convert_location')
-    esa_ln_locations = pd.read_csv('C:/Users/thoma/OneDrive - University of Twente/Studie/Master/Thesis/'
-                                   'Euroma_implementation_inv_error/ESA_LN_Locations.csv')
+    esa_ln_locations = pd.read_csv(os.getcwd() + '/ESA_LN_Locations.csv')
     # Create local copy
     missing_found = 0
     missing_locations = []
