@@ -9,3 +9,12 @@ gen
 /Data/ESA.csv
 /Data/LN.csv
 /venv
+complete_esa_ln_data.csv
+merged_corrections_df.csv
+merged_df_2.csv
+missing fields.csv
+ordend_esa_ln_data.csv
+txtimes.csv
+data_w_corrections.csv
+data_w_o_corrections.csv
+ESA_LN_Locations.csv
