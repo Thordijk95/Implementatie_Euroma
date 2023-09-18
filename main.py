@@ -6,14 +6,15 @@
 import os
 import pandas as pd
 from Data import get_new_data, merge_data, clean_data, convert_type, replace_character, get_correction, \
-    restructure_ln_date_time, insert_tx, extrapolate_features
-
+    restructure_ln_date_time, insert_tx, extrapolate_features, split_df, integer_encode_multi_column
+from sklearn.model_selection import train_test_split
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     prep = False
-    insert_corr = True
+    insert_corr = False
+    train = True
 
     if prep:
         # get the data that resulted from the previous run
