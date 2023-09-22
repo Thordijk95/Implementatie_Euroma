@@ -65,7 +65,6 @@ if __name__ == '__main__':
         merged_df['artikel_nr'] = convert_type(merged_df['artikel_nr'], dtype=int)
         merged_df.to_csv(os.getcwd() + '/tmp.csv')
         full_df = extrapolate_features(merged_df)
-        # full_df.to_csv(os.getcwd() + '/complete_esa_ln_data.csv')
 
         # reorganize the data so that it is the same structure as when training
         sorted_df = full_df[['buchungs_nr', 'Date_Time', 'artikel_nr', 'bewegungsart', 'Totaal_gewicht',
@@ -115,5 +114,5 @@ if __name__ == '__main__':
 
         decoded_df['artikel_nr'] = convert_type(column=decoded_df['artikel_nr'], dtype=int)
 
-        current_status = get_discrepancy(decoded_df, sku_warehouse_df)
-        current_status.to_csv(os.getcwd() + '/Output/current_state.csv')
+        current_prediction = get_discrepancy(decoded_df, sku_warehouse_df)
+        current_prediction.to_csv(os.getcwd() + '/Output/voorspelling.csv')
