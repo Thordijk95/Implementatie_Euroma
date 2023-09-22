@@ -115,4 +115,4 @@ if __name__ == '__main__':
         decoded_df['artikel_nr'] = convert_type(column=decoded_df['artikel_nr'], dtype=int)
 
         current_prediction = get_discrepancy(decoded_df, sku_warehouse_df)
-        current_prediction.to_csv(os.getcwd() + '/Output/voorspelling.csv')
+        current_prediction.to_csv(os.getcwd() + '/Output/current_state.csv')
