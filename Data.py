@@ -171,7 +171,7 @@ def replace_character(column, old_character, new_character):
 
 def convert_location(locations, descriptions):
     print('convert_location')
-    esa_ln_locations = pd.read_csv(os.getcwd() + '/ESA_LN_Locations.csv')
+    esa_ln_locations = pd.read_csv(os.getcwd() + '/Data/ESA_LN_Locations.csv')
     # Create local copy
     missing_found = 0
     missing_locations = []
