@@ -239,7 +239,7 @@ def insert_tx(df, transactions):
     transactions = transactions.drop(columns=['Transaction_Date', 'Warehouse_Description', 'Warehouse',
                                               'Item_Description', 'Item', 'Transaction_Type', 'Transaction_Direction',
                                               'Date', 'Time', 'Month', 'Day', 'Year', 'Hour', 'Minutes', 'Seconds'])
-    tmp_df = tmp_df.drop(columns=['Opmerkingen', 'Gebruiker'])
+    # tmp_df = tmp_df.drop(columns=['Opmerkingen', 'Gebruiker'])
 
     old_col = ['Warehouse_Code', 'Item_Code', 'Quantity_Original', 'Quantity', 'Transaction_Type_Code',
                'Transaction_Type_Description']
@@ -297,7 +297,7 @@ def merge_data(esa_df, ln_df):
     matched_inventory_at_tx = np.zeros(len(merged_df), dtype='float')
     matched_quantity = np.zeros(len(merged_df), dtype='float')
     matched_realized_quantity = np.zeros(len(merged_df), dtype='float')
-    matched_tx_type = np.zeros(len(merged_df), dtype='str')
+    matched_tx_type = np.zeros(len(merged_df), dtype='int')
     matched_tx_code = np.zeros(len(merged_df), dtype='long')
     # remove am/pm notation from date columns
     esa_df[['Date', 'Time']] = esa_df['Date_Time'].str.split(" ", expand=True)
@@ -357,9 +357,10 @@ def merge_data(esa_df, ln_df):
             if (i % 1000) == 0:
                 print(i)
         except:
-            print('failed on:' + str(i))
+            if (i % 1000) == 0:
+                print(i)
+
     merged_df['Mutatiesoort'] = matched_tx_type
-    print("failed merges :" + str(fail_count))
     return merged_df
 
 
@@ -410,7 +411,6 @@ def split_by_location(df):  # Split the transaction data based on the location
 
 
 def calc_expected_inv(df):
-    print("calc_exp_inv")
     # loop over the dataframe and calculate the expected inventory values
     tmp_df = df.copy(deep=True)
     tmp_df = tmp_df.sort_values(by='Date_Time')
@@ -470,7 +470,7 @@ def integer_encode_single_column(column, column_name):
     # export the encoding for referencing lateron
     path = os.getcwd() + "/Encoding/" + column_name + ".csv"
     unique_df.to_csv(path)
-    np_total = local
+    np_total = local.to_numpy()
     for i in range(len(np_total)):
         # if np.where(np_total[i] == unique) == nan:
         #     indx[0][0] = 0
@@ -480,6 +480,7 @@ def integer_encode_single_column(column, column_name):
 
 
 def integer_encode_multi_column(df, columns):
+    print('Start encoding')
     local = df.copy(deep=True)
     for i in columns:
         if i in local.columns:
@@ -487,3 +488,70 @@ def integer_encode_multi_column(df, columns):
         else:
             print('column: ' + i + ' not in dataframe')
     return local
+
+
+def decoding(df, columns):
+    loc_df = df.copy(deep=True)
+
+    for i in columns:
+        array = []
+        enc_col = loc_df[i].to_numpy()
+        enc_df = pd.read_csv(os.getcwd() + '/Encoding/' + i + '.csv')
+        for j in range(len(enc_col)):
+            code = str(int(enc_col[j]-1))
+            array.append(enc_df[code][0])
+        # the value of the encoding is the index of for the actual value
+
+        loc_df[i] = array
+
+    return loc_df
+
+
+def apply_encoding(df, columns):
+    loc_df = df.copy(deep=True)
+    tmp_df = df.copy(deep=True)
+
+    # loop over the columns names that are to be encoded
+    for i in columns:
+        array = np.zeros(len(loc_df))
+        enc_df = pd.read_csv(os.getcwd() + '/Encoding/' + i + '.csv')
+        enc = enc_df.to_numpy()
+        for j in range(0, len(tmp_df)):
+            try:
+                array[j] = np.where(enc[0] == tmp_df[i].iloc[j])[0][0]
+            except ValueError:
+                try:
+                    array[j] = np.where(enc[0] == tmp_df[i].iloc[j][0])[0][0]
+                except:
+                    try:
+                        array[j] = np.where(enc[0] == int(tmp_df[i].iloc[j][0]))[0][0]
+                    except:
+                        print('error')
+            except IndexError:
+                try:
+                    array[j] = np.where(enc[0] == int(tmp_df[i].iloc[j]))[0][0]
+                except:
+                    print('error')
+
+        loc_df[i] = array
+
+    # import the encoding file
+    # encode the values in the column
+
+    return loc_df
+
+
+def get_discrepancy(df, sku_loc):
+    loc_df = df.copy(deep=True)
+    disc_df = sku_loc.copy(deep=True)
+    disc = np.zeros(len(sku_loc))
+
+    for i in range(len(sku_loc)):
+        filtered_df = loc_df[(loc_df['artikel_nr'] == sku_loc['Artikel'][i]) &
+                             (loc_df['Magazijn_LN'] == sku_loc['Opslaglocatie'][i])]
+        if len(filtered_df) > 0:
+            disc[i] = filtered_df['Discrepancy'].iloc[-1]
+
+    disc_df['Discrepancy'] = disc
+
+    return disc_df
