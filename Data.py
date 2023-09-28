@@ -204,14 +204,14 @@ def convert_location(locations, descriptions):
 
 
 def get_correction(df, col_name, code):
-
+    # Filter al transactions of df with the value "code" in the column "col_name"
     corrections = df[df[col_name] == code]
 
     return corrections
 
 
 def rename_columns(df, old_col, new_col):
-
+    # Rename column with label "old_col" in df to "new_col"
     for i in range(0, len(old_col)):
         df = df.rename(columns={old_col[i]: new_col[i]})
     return df
