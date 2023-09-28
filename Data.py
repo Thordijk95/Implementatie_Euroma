@@ -171,7 +171,7 @@ def replace_character(column, old_character, new_character):
 
 def convert_location(locations, descriptions):
     print('convert_location')
-    esa_ln_locations = pd.read_csv(os.getcwd() + '/Data/ESA_LN_Locations.csv')
+    esa_ln_locations = pd.read_csv(os.getcwd() + '/Conversions/ESA_LN_Locations.csv')
     # Create local copy
     missing_found = 0
     missing_locations = []
@@ -189,7 +189,6 @@ def convert_location(locations, descriptions):
         tmp_loc = np_location[i]
         warehouse_index = np.where(esa_locations == tmp_loc)
         warehouse = ln_warehouses[warehouse_index[0]]
-        # conversion = esa_ln_locations[esa_ln_locations['ESA locatie'].str.contains(tmp_loc)]
 
         if len(warehouse_index[0]) == 0:
             missing_locations.append(locations[i])

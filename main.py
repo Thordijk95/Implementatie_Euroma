@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
         # Remove the articles that are not included in the research
         # all included articles and their warehouse are noted in the following list
-        sku_warehouse_df = pd.read_csv(os.getcwd() + '/Data/sku_loc_list.csv')
+        sku_warehouse_df = pd.read_csv(os.getcwd() + '/Conversions/sku_loc_list.csv')
         esa_df = clean_data(esa_df, sku_warehouse_df, sort_col='buchungs_nr', sku_nr_col='artikel_nr',
                             warehouse_col='Magazijn_LN')
 
