@@ -13,7 +13,7 @@ from Data import get_new_data, merge_data, clean_data, convert_type, replace_cha
 from Regression import random_forest_regressor
 from testing import start_testing
 from sklearn.model_selection import train_test_split
-
+from datetime import datetime
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
@@ -77,6 +77,8 @@ if __name__ == '__main__':
 
         corrected_df = corrected_df.drop(columns=['buchungs_nr', 'Date_Time'])
         enc_corrected_df = integer_encode_multi_column(corrected_df, columns=['bewegungsart', 'Magazijn_LN', 'Beweging'])
+
+        # Split the data in a train and test set
         train_df, test_df = train_test_split(enc_corrected_df)
 
         train_features = train_df.drop(columns='Discrepancy')
@@ -85,34 +87,56 @@ if __name__ == '__main__':
         test_features = test_df.drop(columns='Discrepancy')
         test_target = test_df['Discrepancy']
 
+        # train the model
+        print('Train the estimator')
         model = random_forest_regressor(train_features=train_features, train_target=train_target,
                                         test_features=test_features, test_target=test_target)
-
-        # model = joblib.load(os.getcwd() + '/Model/RandomForest_18_09_12_59.joblib')
-        # uncorrected_df = pd.read_csv(os.getcwd() + '/data_w_o_corrections.csv')
+        # create a string for the time stamp
+        now = datetime.now()
+        day = now.strftime("%d")
+        month = now.strftime("%m")
+        hour = now.strftime("%H")
+        minute = now.strftime("%M")
+        my_t_stamp = day + "_" + month + "_" + hour + "_" + minute
+        # store the model
+        joblib.dump(model, os.getcwd() + '/Model/RandomForest_' + my_t_stamp + '.joblib')
+        # remove unneccessary features
         uncorrected_df = uncorrected_df.drop(columns=['buchungs_nr', 'Date_Time'])
+        # Apply integer encoding
         enc_uncorrected_df = apply_encoding(uncorrected_df, ['bewegungsart', 'Magazijn_LN', 'Beweging'])
+        # Initiate a dataframe to store all predictions
         prediction_df = pd.DataFrame(columns=enc_uncorrected_df.columns)
+        # drop the discrepancy column as this is what will be predicted. Shape needs to match that of the training set
         enc_uncorrected_df = enc_uncorrected_df.drop(columns='Discrepancy')
+        # Loop over all the uncorrected transactions and predict the discrepancy
+        print('Perform predictions')
         for i in range(0, len(enc_uncorrected_df)):
+            # Create a copy that can be parsed
             tx = enc_uncorrected_df.iloc[i].copy(deep=True)
-
+            # Filter the dataset to see if the article in the current transaction has already been parsed
             filter_df = prediction_df[
                 (prediction_df['artikel_nr'] == tx['artikel_nr']) & (prediction_df['Magazijn_LN'] == tx['Magazijn_LN'])]
+            # Match on the article and location, copy the discrepancy from the previous state to the current for N-1
             if len(filter_df) > 0:
                 tx['Discrepancy n-1'] = filter_df['Discrepancy'].iloc[-1]
+            # no previous transactions, so no available error
             else:
                 tx['Discrepancy n-1'] = 0
+            # perform the prediction
             prediction = model.predict([tx])
+            # Store the prediction in the transaction
             tx['Discrepancy'] = prediction[0]
-
+            # Store the transaction in the prediction dataframe
             prediction_df.loc[len(prediction_df.index)] = tx
-
-        prediction_df.to_csv(os.getcwd() + '/Output/predictions.csv')
-
+            # Progress indicator, gives a tick every 10% of the uncorrected dataframe
+            if i % round(len(enc_uncorrected_df)/10) == 0:
+                print(i + '/' + len(enc_uncorrected_df))
+        # Store the prediction for inspection if needed
+        prediction_df.to_csv(os.getcwd() + '/Output/predictions_' + my_t_stamp + '.csv')
+        # decode the prediction dataframe
         decoded_df = decoding(prediction_df, ['bewegungsart', 'Magazijn_LN', 'Beweging'])
-
+        # Convert the type of the column to an integer
         decoded_df['artikel_nr'] = convert_type(column=decoded_df['artikel_nr'], dtype=int)
-
+        # Store the current state of the inventory and the predictions on it
         current_prediction = get_discrepancy(decoded_df, sku_warehouse_df)
-        current_prediction.to_csv(os.getcwd() + '/Output/current_state.csv')
+        current_prediction.to_csv(os.getcwd() + '/Output/current_state_' + my_t_stamp + '.csv')
