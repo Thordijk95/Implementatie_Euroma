@@ -74,19 +74,14 @@ def get_new_data():
     return esa_df, ln_df
 
 
-def get_parsed_data():
-    parsed_df = pd.read_csv("some location")  # FIXME change to actual location
-    return parsed_df
-
-
 def clean_data(df, sku_loc_list, sort_col, sku_nr_col, warehouse_col):
-
+    # create local copy
     concat_df = pd.DataFrame()
     # loop over the sku_loc_list and filter the df on this data
     for i in range(0, len(sku_loc_list)):
         filtered_df = df[df[sku_nr_col] == str(sku_loc_list['Artikel'].iloc[i])]
         filtered_df = filtered_df[filtered_df[warehouse_col] == str(sku_loc_list['Opslaglocatie'].iloc[i])]
-
+        # combine the rows that result from the filter
         concat_df = pd.concat([concat_df, filtered_df])
     # when all the data is filtered reorden the transactions
     new_df = concat_df.sort_values(by=sort_col)
@@ -163,7 +158,7 @@ def convert_type(column, dtype):
 
 
 def replace_character(column, old_character, new_character):
-
+    # replace the old character with the new character in the provided column
     column = column.map(lambda x: x.replace(old_character, new_character))
 
     return column
