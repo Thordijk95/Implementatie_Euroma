@@ -22,5 +22,6 @@ ESA_LN_Locations.csv
 *.joblib
 current_state*.csv
 merged*.csv
-tijdelijke_merge.csv
+/Data/Oude bestanden/*
+/Data/Old/*
 
