@@ -19,3 +19,8 @@ data_w_corrections.csv
 data_w_o_corrections.csv
 ESA_LN_Locations.csv
 /Encoding
+*.joblib
+current_state*.csv
+merged*.csv
+tijdelijke_merge.csv
+
