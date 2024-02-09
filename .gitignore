@@ -24,4 +24,7 @@ current_state*.csv
 merged*.csv
 /Data/Oude bestanden/*
 /Data/Old/*
+/Output/*
+tmp.csv
+
 
