@@ -16,7 +16,6 @@ def split_df(df, sku_loc):
     complete_uncorrected_df = pd.DataFrame(columns=col_names)
     complete_corrected_df = pd.DataFrame(columns=col_names)
 
-
     for i in range(len(sku_loc)):
         tmp_df = loc_df[(loc_df['artikel_nr'] == sku_loc['Artikel'][i]) & (loc_df['Magazijn_LN'] == sku_loc['Opslaglocatie'][i])]
         if len(tmp_df) > 0:
@@ -227,7 +226,7 @@ def insert_tx(df, transactions):
     # convert to datetime type so a comparison can be made
     new_tx_times = np.array([np.datetime64(dt_str) for dt_str in new_tx_time_strings])
     tx_time_df = pd.DataFrame(new_tx_times)
-    tx_time_df.to_csv(os.getcwd() + '/txtimes.csv')
+    # tx_time_df.to_csv(os.getcwd() + '/txtimes.csv')
     tx_times = np.array([np.datetime64(dt_str) for dt_str in tx_time_strings])
 
     transactions = transactions.drop(columns=['Transaction_Date', 'Warehouse_Description', 'Warehouse',

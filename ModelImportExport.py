@@ -14,5 +14,5 @@ def export_fit(best_model, algo_name):
     minute = now.strftime("%M")
     my_t_stamp = day + "_" + month + "_" + hour + "_" + minute
 
-    model_name = os.getcwd() + '/Model/' + algo_name + ".joblib"
+    model_name = os.getcwd() + '/Model/' + algo_name + '_' + my_t_stamp + ".joblib"
     dump(best_model, model_name)

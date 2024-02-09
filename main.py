@@ -64,6 +64,7 @@ if __name__ == '__main__':
         merged_df = merged_df.drop(columns=['Tijd', 'Lager', 'Werkplek'])
         merged_df['artikel_nr'] = convert_type(merged_df['artikel_nr'], dtype=int)
         merged_df.to_csv(os.getcwd() + '/tmp.csv')
+        merged_df = pd.read_csv(os.getcwd() + '/tmp.csv')
         full_df = extrapolate_features(merged_df)
 
         # reorganize the data so that it is the same structure as when training
@@ -99,7 +100,7 @@ if __name__ == '__main__':
         minute = now.strftime("%M")
         my_t_stamp = day + "_" + month + "_" + hour + "_" + minute
         # store the model
-        joblib.dump(model, os.getcwd() + '/Model/RandomForest_' + my_t_stamp + '.joblib')
+        # joblib.dump(model, os.getcwd() + '/Model/RandomForest_' + my_t_stamp + '.joblib')
         # remove unneccessary features
         uncorrected_df = uncorrected_df.drop(columns=['buchungs_nr', 'Date_Time'])
         # Apply integer encoding
@@ -130,7 +131,7 @@ if __name__ == '__main__':
             prediction_df.loc[len(prediction_df.index)] = tx
             # Progress indicator, gives a tick every 10% of the uncorrected dataframe
             if i % round(len(enc_uncorrected_df)/10) == 0:
-                print(i + '/' + len(enc_uncorrected_df))
+                print(str(i) + '/' + str(len(enc_uncorrected_df)))
         # Store the prediction for inspection if needed
         prediction_df.to_csv(os.getcwd() + '/Output/predictions_' + my_t_stamp + '.csv')
         # decode the prediction dataframe
